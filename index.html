@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape Room: Arquitectura Clásica</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #8B4513 0%, #D2691E 50%, #F4A460 100%);
+            min-height: 100vh;
+            color: #2C1810;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .screen {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 3px solid #8B4513;
+        }
+        
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 {
+            text-align: center;
+            color: #8B4513;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: #A0522D;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #D2691E;
+            padding-bottom: 10px;
+        }
+        
+        .presenters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .presenter {
+            background: linear-gradient(135deg, #F4A460, #DEB887);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #8B4513;
+            transition: transform 0.3s ease;
+        }
+        
+        .presenter:hover {
+            transform: scale(1.05);
+        }
+        
+        .presenter h3 {
+            color: #8B4513;
+            margin-bottom: 10px;
+        }
+        
+        .question {
+            background: #FFF8DC;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #8B4513;
+        }
+        
+        .question h3 {
+            color: #A0522D;
+            margin-bottom: 15px;
+        }
+        
+        .options {
+            display: grid;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .option {
+            background: #F5F5DC;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .option:hover {
+            border-color: #D2691E;
+            background: #FFF8DC;
+        }
+        
+        .option.selected {
+            background: #DEB887;
+            border-color: #8B4513;
+        }
+        
+        .option.correct {
+            background: #90EE90;
+            border-color: #228B22;
+        }
+        
+        .option.incorrect {
+            background: #FFB6C1;
+            border-color: #DC143C;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #8B4513, #A0522D);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #A0522D, #8B4513);
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            background: #999;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .progress {
+            background: #F5F5DC;
+            height: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 2px solid #8B4513;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #8B4513, #D2691E);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(139, 69, 19, 0.9);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .score {
+            text-align: center;
+            font-size: 1.5em;
+            margin: 20px 0;
+            color: #8B4513;
+        }
+        
+        .story-box {
+            background: linear-gradient(135deg, #FFF8DC, #F5F5DC);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 3px solid #D2691E;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        
+        .code-display {
+            background: #2C1810;
+            color: #D2691E;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 2em;
+            text-align: center;
+            margin: 20px 0;
+            border: 3px solid #8B4513;
+        }
+        
+        .congrats {
+            text-align: center;
+            color: #228B22;
+            font-size: 1.3em;
+            margin: 20px 0;
+        }
+        
+        .presenter-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #F4A460, #DEB887);
+            border-radius: 15px;
+            border: 3px solid #8B4513;
+        }
+        
+        .presenter-section h2 {
+            color: #8B4513;
+            border-bottom: 3px solid #A0522D;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .presenter-section h3 {
+            color: #A0522D;
+            margin: 15px 0 10px 0;
+            font-size: 1.3em;
+        }
+        
+        .presenter-section p {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="timer" id="timer">⏱️ 45:00</div>
+    
+    <div class="container">
+        <!-- Pantalla de Presentación -->
+        <div class="screen active" id="presentation">
+            <h1>🏛️ ESCAPE ROOM ARQUITECTURA CLÁSICA 🏛️</h1>
+            <div class="story-box">
+                <p><strong>¡Bienvenidos arqueólogos!</strong> Habéis descubierto una antigua biblioteca romana que contiene los secretos de la arquitectura clásica. Sin embargo, está protegida por un sistema de enigmas que solo los verdaderos conocedores de la cultura greco-romana pueden resolver.</p>
+                <p><strong>Vuestra misión:</strong> Resolver 8 desafíos sobre arquitectura griega y romana para obtener el código secreto y escapar antes de que se agote el tiempo.</p>
+                <p><strong>Tiempo límite:</strong> 45 minutos</p>
+            </div>
+            
+            <h2>👥 Presentado por:</h2>
+            <div class="presenters">
+                <div class="presenter">
+                    <h3>🏺 Hasibullah</h3>
+                    <p>Especialista en templos griegos y órdenes arquitectónicos</p>
+                </div>
+                <div class="presenter">
+                    <h3>🏛️ Carla</h3>
+                    <p>Experta en arquitectura romana y técnicas constructivas</p>
+                </div>
+                <div class="presenter">
+                    <h3>⚱️ Hirmia</h3>
+                    <p>Conocedora de decoración y elementos ornamentales</p>
+                </div>
+                <div class="presenter">
+                    <h3>🗿 Johan</h3>
+                    <p>Especialista en materiales y estructura de edificios</p>
+                </div>
+                <div class="presenter">
+                    <h3>🏟️ Veronica</h3>
+                    <p>Experta en tipos de edificios y su función social</p>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn" onclick="showTheory()">📚 VER TEORÍA</button>
+                <button class="btn" onclick="startEscapeRoom()">🚀 IR DIRECTO AL DESAFÍO</button>
+            </div>
+        </div>
+        
+        <!-- Pantalla de Teoría -->
+        <div class="screen" id="theory">
+            <h1>📚 ARQUITECTURA CLÁSICA: FUNDAMENTOS TEÓRICOS</h1>
+            
+            <div class="presenter-section">
+                <h2>🏺 Hasibullah - Templos Griegos y Órdenes Arquitectónicos</h2>
+                <div class="story-box">
+                    <h3>🏛️ Los Órdenes Arquitectónicos Griegos</h3>
+                    <p><strong>Orden Dórico:</strong> El más antiguo y simple. Columnas sin basa, fuste estriado y capitel liso. Representa la fuerza y simplicidad. Ejemplo: Partenón de Atenas.</p>
+                    <p><strong>Orden Jónico:</strong> Más elegante y decorativo. Columnas con basa, fuste estriado y capitel con volutas (espirales). Representa la gracia. Ejemplo: Erecteion de Atenas.</p>
+                    <p><strong>Orden Corintio:</strong> El más ornamentado. Capitel decorado con hojas de acanto. Representa la riqueza y sofisticación.</p>
+                    
+                    <h3>🏛️ Estructura del Templo Griego</h3>
+                    <p><strong>Naos o Cella:</strong> Sala principal donde se guardaba la estatua del dios.</p>
+                    <p><strong>Pronaos:</strong> Vestíbulo de entrada al templo.</p>
+                    <p><strong>Opistódomos:</strong> Sala posterior, a veces usada como tesoro.</p>
+                    <p><strong>Peristilo:</strong> Columnata que rodea el templo.</p>
+                </div>
+            </div>
+
+            <div class="presenter-section">
+                <h2>🏛️ Carla - Arquitectura Romana y Técnicas Constructivas</h2>
+                <div class="story-box">
+                    <h3>🔨 Innovaciones Romanas</h3>
+                    <p><strong>El Arco:</strong> Elemento fundamental que permitió cubrir grandes espacios y soportar más peso que el sistema adintelado griego.</p>
+                    <p><strong>La Bóveda:</strong> Sucesión de arcos que crea espacios cubiertos amplios.</p>
+                    <p><strong>La Cúpula:</strong> Bóveda hemisférica, como la del Panteón de Roma.</p>
+                    
+                    <h3>🧱 Materiales Revolucionarios</h3>
+                    <p><strong>Opus Caementicium (Hormigón Romano):</strong> Mezcla de cal, arena, agua y fragmentos de piedra. Permitió construcciones más rápidas y económicas.</p>
+                    <p><strong>Ladrillo:</strong> Más barato que la piedra, permitió construcciones masivas.</p>
+                    <p><strong>Mármol:</strong> Usado para decoración y edificios importantes.</p>
+                </div>
+            </div>
+
+            <div class="presenter-section">
+                <h2>⚱️ Hirmia - Decoración y Elementos Ornamentales</h2>
+                <div class="story-box">
+                    <h3>🎨 Decoración Griega</h3>
+                    <p><strong>Frontón:</strong> Espacio triangular decorado con esculturas que narran mitos.</p>
+                    <p><strong>Metopas y Triglifos:</strong> En el friso dórico, alternan paneles decorados con relieves.</p>
+                    <p><strong>Friso Jónico:</strong> Banda continua con relieves narrativos.</p>
+                    
+                    <h3>🎭 Ornamentación Romana</h3>
+                    <p><strong>Capitel Compuesto:</strong> Combina volutas jónicas con hojas corintias.</p>
+                    <p><strong>Relieves Históricos:</strong> Narran victorias militares y eventos importantes.</p>
+                    <p><strong>Mosaicos:</strong> Decoración de suelos con pequeñas teselas de colores.</p>
+                </div>
+            </div>
+
+            <div class="presenter-section">
+                <h2>🗿 Johan - Materiales y Estructuras</h2>
+                <div class="story-box">
+                    <h3>🏗️ Sistemas Constructivos Griegos</h3>
+                    <p><strong>Sistema Adintelado:</strong> Basado en columnas verticales y vigas horizontales (dinteles).</p>
+                    <p><strong>Materiales:</strong> Principalmente mármol, caliza y madera.</p>
+                    <p><strong>Técnica:</strong> Bloques unidos con grapas de hierro y uniones perfectas sin mortero.</p>
+                    
+                    <h3>🏛️ Estructuras Romanas</h3>
+                    <p><strong>Sistema Arquitrabado:</strong> Combinación del sistema griego con arcos y bóvedas.</p>
+                    <p><strong>Cimentaciones:</strong> Profundas y sólidas, usando hormigón.</p>
+                    <p><strong>Muros:</strong> Diversos tipos (opus incertum, opus reticulatum, opus latericium).</p>
+                </div>
+            </div>
+
+            <div class="presenter-section">
+                <h2>🏟️ Veronica - Tipos de Edificios y Función Social</h2>
+                <div class="story-box">
+                    <h3>🏛️ Edificios Griegos</h3>
+                    <p><strong>Templos:</strong> Centro religioso de la polis, casa de los dioses.</p>
+                    <p><strong>Teatros:</strong> Espacios para representaciones teatrales y asambleas.</p>
+                    <p><strong>Stoas:</strong> Pórticos cubiertos para el comercio y reuniones.</p>
+                    <p><strong>Gimnasios:</strong> Centros de educación física e intelectual.</p>
+                    
+                    <h3>🏛️ Edificios Romanos</h3>
+                    <p><strong>Basílicas:</strong> Edificios para administrar justicia y realizar negocios.</p>
+                    <p><strong>Anfiteatros:</strong> Para espectáculos gladiatorios (ej: Coliseo).</p>
+                    <p><strong>Termas:</strong> Complejos de baños públicos con funciones sociales.</p>
+                    <p><strong>Circos:</strong> Para carreras de carros (ej: Circo Máximo).</p>
+                    <p><strong>Acueductos:</strong> Sistemas de abastecimiento de agua.</p>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px;">
+                <button class="btn" onclick="showGameFromTheory()">🎮 ¡COMENZAR EL DESAFÍO!</button>
+                <button class="btn" onclick="backToPresentation()">⬅️ Volver a Presentación</button>
+            </div>
+        </div>
+
+        <!-- Pantalla de Juego -->
+        <div class="screen" id="game">
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="score">Pregunta <span id="currentQ">1</span> de 8 | Puntuación: <span id="score">0</span>/800</div>
+            
+            <div id="questionContainer"></div>
+            
+            <div style="text-align: center;">
+                <button class="btn" id="submitBtn" onclick="submitAnswer()" disabled>Confirmar Respuesta</button>
+                <button class="btn" id="nextBtn" onclick="nextQuestion()" style="display: none;">Siguiente Pregunta</button>
+            </div>
+        </div>
+        
+        <!-- Pantalla Final -->
+        <div class="screen" id="final">
+            <h1>🎉 ¡FELICIDADES! 🎉</h1>
+            <div class="congrats">
+                <p>¡Habéis logrado escapar de la biblioteca antigua!</p>
+                <div class="code-display" id="finalCode"></div>
+                <p>Vuestra puntuación final: <span id="finalScore"></span>/800</p>
+                <p id="finalMessage"></p>
+            </div>
+            
+            <div class="story-box">
+                <p><strong>¡Enhorabuena, arqueólogos!</strong> Habéis demostrado ser verdaderos expertos en arquitectura clásica. Los conocimientos que habéis aplicado sobre templos griegos, basílicas romanas, órdenes arquitectónicos y técnicas constructivas os han permitido descifrar los antiguos enigmas.</p>
+                <p>La sabiduría de griegos y romanos vivirá para siempre gracias a estudiosos como vosotros. ¡La historia os recordará!</p>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn" onclick="restartGame()">🔄 Jugar de Nuevo</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "¿Cuál es la principal diferencia entre el orden dórico y el jónico griego?",
+                options: [
+                    "El dórico tiene capitel decorado con volutas, el jónico es liso",
+                    "El jónico tiene capitel decorado con volutas, el dórico es liso",
+                    "El dórico es más alto que el jónico",
+                    "No hay diferencias significativas entre ambos"
+                ],
+                correct: 1,
+                code: "D"
+            },
+            {
+                question: "¿Qué elemento arquitectónico romano permitió construir grandes espacios cubiertos?",
+                options: [
+                    "La columna corintia",
+                    "El arco de medio punto",
+                    "El capitel compuesto",
+                    "El entablamento"
+                ],
+                correct: 1,
+                code: "O"
+            },
+            {
+                question: "¿Cómo se llama la sala principal de un templo griego donde se ubicaba la estatua del dios?",
+                options: [
+                    "Pronaos",
+                    "Opistódomos",
+                    "Naos o cella",
+                    "Peristilo"
+                ],
+                correct: 2,
+                code: "R"
+            },
+            {
+                question: "¿Qué material revolucionario utilizaron los romanos en sus construcciones?",
+                options: [
+                    "Mármol de Carrara",
+                    "Piedra caliza",
+                    "Hormigón (opus caementicium)",
+                    "Bronce"
+                ],
+                correct: 2,
+                code: "I"
+            },
+            {
+                question: "¿Cuál era la función principal de una basílica romana?",
+                options: [
+                    "Celebrar ceremonias religiosas",
+                    "Administrar justicia y realizar negocios",
+                    "Realizar espectáculos gladiatorios",
+                    "Servir como residencia imperial"
+                ],
+                correct: 1,
+                code: "C"
+            },
+            {
+                question: "¿Qué caracteriza al orden corintio?",
+                options: [
+                    "Capitel decorado con hojas de acanto",
+                    "Capitel con volutas",
+                    "Capitel liso sin decoración",
+                    "Capitel con figuras humanas"
+                ],
+                correct: 0,
+                code: "U"
+            },
+            {
+                question: "¿Cómo se denomina el espacio semicircular que corona algunas basílicas romanas?",
+                options: [
+                    "Atrio",
+                    "Nártex",
+                    "Ábside",
+                    "Transepto"
+                ],
+                correct: 2,
+                code: "M"
+            },
+            {
+                question: "¿Qué tipo de planta tenían típicamente los templos griegos?",
+                options: [
+                    "Planta circular",
+                    "Planta basilical",
+                    "Planta rectangular rodeada de columnas",
+                    "Planta octogonal"
+                ],
+                correct: 2,
+                code: "!"
+            }
+        ];
+        
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedAnswer = -1;
+        let gameCode = "";
+        let timeLeft = 45 * 60; // 45 minutos en segundos
+        let timerInterval;
+        
+        function showTheory() {
+            document.getElementById('presentation').classList.remove('active');
+            document.getElementById('theory').classList.add('active');
+        }
+        
+        function showGameFromTheory() {
+            document.getElementById('theory').classList.remove('active');
+            document.getElementById('game').classList.add('active');
+            startTimer();
+            showQuestion();
+        }
+        
+        function backToPresentation() {
+            document.getElementById('theory').classList.remove('active');
+            document.getElementById('presentation').classList.add('active');
+        }
+        
+        function startEscapeRoom() {
+            document.getElementById('presentation').classList.remove('active');
+            document.getElementById('game').classList.add('active');
+            startTimer();
+            showQuestion();
+        }
+        
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('timer').innerHTML = `⏱️ ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        function showQuestion() {
+            const q = questions[currentQuestion];
+            const container = document.getElementById('questionContainer');
+            
+            container.innerHTML = `
+                <div class="question">
+                    <h3>🏛️ Desafío ${currentQuestion + 1}</h3>
+                    <p><strong>${q.question}</strong></p>
+                    <div class="options">
+                        ${q.options.map((option, index) => 
+                            `<div class="option" onclick="selectAnswer(${index})">${String.fromCharCode(65 + index)}) ${option}</div>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('currentQ').textContent = currentQuestion + 1;
+            updateProgress();
+            selectedAnswer = -1;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+        
+        function selectAnswer(index) {
+            const options = document.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            options[index].classList.add('selected');
+            selectedAnswer = index;
+            document.getElementById('submitBtn').disabled = false;
+        }
+        
+        function submitAnswer() {
+            if (selectedAnswer === -1) return;
+            
+            const q = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            
+            options.forEach((opt, index) => {
+                if (index === q.correct) {
+                    opt.classList.add('correct');
+                } else if (index === selectedAnswer && index !== q.correct) {
+                    opt.classList.add('incorrect');
+                }
+            });
+            
+            if (selectedAnswer === q.correct) {
+                score += 100;
+                gameCode += q.code;
+            }
+            
+            document.getElementById('score').textContent = score;
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+        }
+        
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion();
+                document.getElementById('submitBtn').style.display = 'inline-block';
+            } else {
+                endGame();
+            }
+        }
+        
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+        
+        function endGame() {
+            clearInterval(timerInterval);
+            document.getElementById('game').classList.remove('active');
+            document.getElementById('final').classList.add('active');
+            
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalCode').textContent = `CÓDIGO SECRETO: ${gameCode}`;
+            
+            let message = "";
+            if (score >= 700) {
+                message = "¡EXCELENTE! Sois verdaderos maestros de la arquitectura clásica.";
+            } else if (score >= 500) {
+                message = "¡MUY BIEN! Tenéis buenos conocimientos sobre el tema.";
+            } else if (score >= 300) {
+                message = "¡BIEN! Habéis logrado escapar, pero podéis mejorar.";
+            } else {
+                message = "¡SUFICIENTE! Necesitáis repasar más la arquitectura clásica.";
+            }
+            
+            document.getElementById('finalMessage').textContent = message;
+        }
+        
+        function restartGame() {
+            currentQuestion = 0;
+            score = 0;
+            selectedAnswer = -1;
+            gameCode = "";
+            timeLeft = 45 * 60;
+            
+            document.getElementById('final').classList.remove('active');
+            document.getElementById('presentation').classList.add('active');
+        }
+    </script>
+</body>
+</html>
